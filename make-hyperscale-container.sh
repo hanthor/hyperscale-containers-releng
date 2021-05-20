@@ -2,6 +2,8 @@
 
 releasever='8'
 packages='centos-release-hyperscale dnf systemd'
+summary="CentOS Stream $releasever container with Hyperscale packages"
+description="Provides a base CentOS Stream $releasever container with updated packages from the Hyperscale SIG (e.g. systemd)."
 
 if ! grep -q "CentOS Stream $releasever" /etc/os-release; then
   echo "You need to run this on a CentOS Stream $releasever host"
@@ -29,9 +31,19 @@ chmod +x "$script"
 buildah unshare "$script"
 
 buildah config \
-  --created-by "CentOS Hyperscale SIG" \
-  --author "CentOS Hyperscale SIG" \
-  --label name="centos-stream-hyperscale-${releasever}" \
+  --created-by 'make-hyperscale-container.sh' \
+  --author 'CentOS Hyperscale SIG' \
+  --label name='centos-stream-hyperscale' \
+  --label version="${releasever}" \
+  --label architecture="$(uname -m)" \
+  --label maintainer="CentOS Hyperscale SIG" \
+  --label summary="${summary}" \
+  --label description="${description}" \
+  --label url='https://quay.io/centoshyperscale/centos' \
+  --label io.k8s.display-name="CentOS Stream ${releasever} Hyperscale" \
+  --label io.k8s.description="${description}" \
+  --label io.openshift.tags='base centos centos-stream hyperscale' \
+  --cmd '/bin/bash' \
   "$newcontainer"
 buildah commit "$newcontainer" "centos-stream-hyperscale-${releasever}"
 buildah rm "$newcontainer"
