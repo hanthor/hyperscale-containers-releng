@@ -1,7 +1,7 @@
 #!/bin/sh
 
 releasever='8'
-packages='centos-release-hyperscale dnf systemd'
+packages='centos-release-hyperscale epel-release dnf systemd'
 summary="CentOS Stream $releasever container with Hyperscale packages"
 description="Provides a base CentOS Stream $releasever container with updated packages from the Hyperscale SIG (e.g. systemd)."
 
@@ -24,6 +24,8 @@ dnf -y install \
   --releasever "$releasever" \
   --setopt install_weak_deps=false \
   $packages
+sed -e 's/^enabled=0\$/enabled=1/g' \
+    -i "\${scratchmnt}/etc/yum.repos.d/CentOS-Stream-PowerTools.repo"
 dnf -y --installroot "\$scratchmnt" clean all
 buildah unmount "$newcontainer"
 EOF
