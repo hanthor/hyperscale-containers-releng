@@ -1,9 +1,9 @@
 #!/bin/sh
 
 releasever='8'
-packages='centos-release-hyperscale epel-release dnf systemd'
-summary="CentOS Stream $releasever container with Hyperscale packages"
-description="Provides a base CentOS Stream $releasever container with updated packages from the Hyperscale SIG (e.g. systemd)."
+packages='centos-release-hyperscale centos-release-hyperscale-hotfixes centos-release-hyperscale-spin centos-release-hyperscale-experimental epel-release dnf systemd'
+summary="CentOS Stream $releasever Hyperscale container"
+description="Provides a base CentOS Stream $releasever Hyperscale variant container"
 
 if ! grep -q "CentOS Stream $releasever" /etc/os-release; then
   echo "You need to run this on a CentOS Stream $releasever host"
@@ -26,6 +26,8 @@ dnf -y install \
   $packages
 sed -e 's/^enabled=0\$/enabled=1/g' \
     -i "\${scratchmnt}/etc/yum.repos.d/CentOS-Stream-PowerTools.repo"
+dnf -y swap centos-stream-release centos-stream-hyperscale-spin-release
+dnf -y --setopt install_weak_deps=false distro-sync
 dnf -y --installroot "\$scratchmnt" clean all
 buildah unmount "$newcontainer"
 EOF
