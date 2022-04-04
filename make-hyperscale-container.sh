@@ -1,12 +1,28 @@
 #!/bin/sh
 
-releasever='8'
-packages='centos-release-hyperscale centos-release-hyperscale-hotfixes centos-release-hyperscale-spin centos-release-hyperscale-experimental epel-release dnf systemd'
+releasever="$1"
+[ -z "$releasever" ] && releasever='8'
+dnf_opts="-y --setopt install_weak_deps=false"
+packages='centos-release-hyperscale centos-release-hyperscale-experimental centos-release-hyperscale-spin epel-release dnf dnf-plugins-core systemd'
+if [ "$releasever" -eq 8 ]; then
+  packages="$packages centos-release-hyperscale-hotfixes"
+  crb_repo="powertools"
+  dnf_opts="$dnf_opts --disableplugin product-id"
+  release_pkg="centos-stream-hyperscale-spin-release"
+else
+  crb_repo="crb"
+  release_pkg="centos-stream-spin-hyperscale-release"
+fi
 summary="CentOS Stream $releasever Hyperscale container"
 description="Provides a base CentOS Stream $releasever Hyperscale variant container"
 
 if ! grep -q "CentOS Stream $releasever" /etc/os-release; then
   echo "You need to run this on a CentOS Stream $releasever host"
+  exit 1
+fi
+
+if [ ! -r /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-HyperScale ]; then
+  echo "Hyperscale GPG key not found, please install centos-release-hyperscale"
   exit 1
 fi
 
@@ -16,19 +32,14 @@ trap 'rm -f $script' EXIT
 newcontainer=$(buildah from scratch)
 
 cat > "$script" <<EOF
-#!/bin/sh
+#!/bin/sh -x
 scratchmnt=\$(buildah mount "$newcontainer")
-dnf -y install \
-  --disableplugin product-id \
-  --installroot "\$scratchmnt" \
-  --releasever "$releasever" \
-  --setopt install_weak_deps=false \
-  $packages
-sed -e 's/^enabled=0\$/enabled=1/g' \
-    -i "\${scratchmnt}/etc/yum.repos.d/CentOS-Stream-PowerTools.repo"
-dnf -y swap centos-stream-release centos-stream-hyperscale-spin-release
-dnf -y --setopt install_weak_deps=false distro-sync
-dnf -y --installroot "\$scratchmnt" clean all
+dnf="dnf $dnf_opts --installroot \$scratchmnt"
+\$dnf install --releasever "$releasever" $packages
+\$dnf config-manager --set-enabled "$crb_repo"
+\$dnf swap centos-stream-release "$release_pkg"
+\$dnf distro-sync
+\$dnf clean all
 buildah unmount "$newcontainer"
 EOF
 chmod +x "$script"
