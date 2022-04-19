@@ -29,6 +29,10 @@ fi
 script=$(mktemp)
 trap 'rm -f $script' EXIT
 
+# Hack to make these work with docker on el7
+# https://access.redhat.com/solutions/6843481
+export BUILDAH_FORMAT=docker
+
 newcontainer=$(buildah from scratch)
 
 cat > "$script" <<EOF
