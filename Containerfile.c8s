@@ -1,0 +1,60 @@
+FROM quay.io/centoshyperscale/centos:stream8
+
+# Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container
+# https://github.com/containers/buildah/blob/main/docs/tutorials/05-openshift-rootless-build.md
+# https://github.com/containers/buildah/blob/main/contrib/buildahimage/stable/Containerfile
+
+ENV _BUILDAH_STARTED_IN_USERNS=""
+ENV BUILDAH_ISOLATION=chroot
+ENV STORAGE_DRIVER=vfs
+ENV VERSION=8
+# Date for next build
+ENV DATE="08:00 next Fri"
+
+# Add user for rootless build
+RUN adduser build
+
+RUN dnf -y update
+RUN dnf -y install vi buildah podman
+RUN dnf -y clean all && \
+    rm -rf /var/cache /var/log/dnf*
+
+RUN chmod u-s /usr/bin/newuidmap && \
+    chmod u-s /usr/bin/newgidmap
+
+# Define uid/gid ranges for our user
+# https://github.com/containers/buildah/issues/3053
+RUN touch /etc/subgid /etc/subuid && \
+    chmod g=u /etc/subgid /etc/subuid /etc/passwd && \
+    echo build:10000:65536 > /etc/subuid && \
+    echo build:10000:65536 > /etc/subgid
+
+RUN (echo '[engine]';echo 'cgroup_manager = "cgroupfs"') > /etc/containers/containers.conf
+RUN chmod 644 /etc/containers/containers.conf
+
+RUN echo "export BUILDAH_ISOLATION=chroot" >> /home/build/.bashrc
+RUN mkdir -p /home/build/.local/share/containers
+
+# Adjust storage.conf to enable VFS since fuse dosen't work on Openshift
+RUN mkdir -p /home/build/.config/containers && \
+    (echo '[storage]';echo 'driver = "vfs"') > /home/build/.config/containers/storage.conf
+
+RUN mkdir -p /var/lib/shared/vfs-images \
+             /var/lib/shared/vfs-layers && \
+    touch /var/lib/shared/vfs-images/images.lock && \
+    touch /var/lib/shared/vfs-layers/layers.lock
+
+COPY make-hyperscale-container.sh /home/build
+COPY runner.sh /home/build
+RUN chmod a+x /home/build/make-hyperscale-container.sh
+RUN chmod a+x /home/build/runner.sh
+
+RUN chown build:build -R /home/build
+
+VOLUME /var/lib/containers
+VOLUME /home/build/.local/share/containers
+
+USER build
+WORKDIR /home/build
+
+ENTRYPOINT ["./runner.sh"]
