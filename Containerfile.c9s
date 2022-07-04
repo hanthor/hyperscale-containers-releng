@@ -15,7 +15,7 @@ ENV DATE="08:00 next Fri"
 RUN adduser build
 
 RUN dnf -y update
-RUN dnf -y install vi buildah
+RUN dnf -y install vi buildah sqlite
 RUN dnf -y clean all && \
     rm -rf /var/cache /var/log/dnf*
 
@@ -46,8 +46,10 @@ RUN mkdir -p /var/lib/shared/vfs-images \
 
 COPY make-hyperscale-container.sh /home/build
 COPY runner.sh /home/build
+COPY validate/verify_rpmdb.sh /home/build
 RUN chmod a+x /home/build/make-hyperscale-container.sh
 RUN chmod a+x /home/build/runner.sh
+RUN chmod a+x /home/build/verify_rpmdb.sh
 
 RUN chown build:build -R /home/build
 

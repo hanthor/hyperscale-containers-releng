@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 export TZ='America/Los_Angeles'
 
 # Hyperscale Centos Stream version, default 8
@@ -18,6 +20,7 @@ Push () {
 
 # Always run once immediately for easy testing.
 ./make-hyperscale-container.sh $VERSION
+./verify_rpmdb.sh
 Push
 
 while true; do
@@ -26,6 +29,7 @@ while true; do
   sleep "$TIME"
   echo "Starting at $(date)"
   ./make-hyperscale-container.sh $VERSION
+  ./verify_rpmdb.sh
   Push
   echo "Done at $(date)"
   echo
