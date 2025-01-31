@@ -1,9 +1,9 @@
 #!/bin/sh
 
 releasever="$1"
-[ -z "$releasever" ] && releasever='8'
+[ -z "$releasever" ] && releasever='10'
 dnf_opts="-y --setopt install_weak_deps=false"
-packages='centos-release-hyperscale centos-release-hyperscale-experimental centos-release-hyperscale-spin epel-release dnf dnf-plugins-core systemd'
+packages='centos-release-hyperscale centos-release-hyperscale-kernel centos-release-hyperscale-experimental centos-release-hyperscale-spin epel-release dnf dnf-plugins-core systemd'
 if [ "$releasever" -eq 8 ]; then
   packages="$packages centos-release-hyperscale-hotfixes"
   crb_repo="powertools"
