@@ -1,4 +1,4 @@
-FROM quay.io/centoshyperscale/centos:stream10
+FROM quay.io/centos/centos:stream10
 
 # Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container
 # https://github.com/containers/buildah/blob/main/docs/tutorials/05-openshift-rootless-build.md
@@ -7,7 +7,7 @@ FROM quay.io/centoshyperscale/centos:stream10
 ENV _BUILDAH_STARTED_IN_USERNS=""
 ENV BUILDAH_ISOLATION=chroot
 ENV STORAGE_DRIVER=vfs
-ENV VERSION=9
+ENV VERSION=10
 # Date for next build
 ENV DATE="08:00 next Fri"
 
@@ -15,7 +15,7 @@ ENV DATE="08:00 next Fri"
 RUN adduser build
 
 RUN dnf -y update
-RUN dnf -y install vi buildah sqlite
+RUN dnf -y install vi buildah sqlite epel-release centos-release-hyperscale
 RUN dnf -y clean all && \
     rm -rf /var/cache /var/log/dnf*
 

@@ -3,12 +3,15 @@
 releasever="$1"
 [ -z "$releasever" ] && releasever='10'
 dnf_opts="-y --setopt install_weak_deps=false"
-packages='centos-release-hyperscale centos-release-hyperscale-kernel centos-release-hyperscale-experimental centos-release-hyperscale-spin epel-release dnf dnf-plugins-core systemd'
+packages='centos-release-hyperscale centos-release-hyperscale-experimental centos-release-hyperscale-spin epel-release dnf dnf-plugins-core systemd'
 if [ "$releasever" -eq 8 ]; then
   packages="$packages centos-release-hyperscale-hotfixes"
   crb_repo="powertools"
   dnf_opts="$dnf_opts --disableplugin product-id"
   release_pkg="centos-stream-hyperscale-spin-release"
+fi
+if [ "$releasever" -eq 10 ]; then
+  packages="$packages centos-release-hyperscale-kernel"
 else
   crb_repo="crb"
   release_pkg="centos-stream-spin-hyperscale-release"
