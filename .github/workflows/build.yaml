@@ -13,11 +13,12 @@ jobs:
     - name: Set up Podman
       uses: redhat-actions/podman-login@v1
       with:
-        username: ${{ secrets.PODMAN_USERNAME }}
-        password: ${{ secrets.PODMAN_PASSWORD }}
-
+      registry: quay.io
+      username: ${{ secrets.PODMAN_USERNAME }}
+      password: ${{ secrets.PODMAN_PASSWORD }} 
+      
     - name: Build container
-      run: podman build -f Containerfile.c10s . -t localhost/c10-hs-runner
+    run: podman build -f Containerfile.c10s . -t localhost/c10-hs-runner
 
     - name: Run container
       env:
